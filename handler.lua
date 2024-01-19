@@ -10,7 +10,7 @@ local TokenHandler = {
 local function introspect_access_token(conf, access_token, req_uri)
   local httpc = http:new()
   -- step 1: validate the token
-  local res, err = httpc:request_uri(conf.introspection_endpoint, {
+  local res, err = httpc:request_uri(conf.authentication_endpoint, {
       method = "POST",
       ssl_verify = false,
       headers = {
@@ -19,11 +19,11 @@ local function introspect_access_token(conf, access_token, req_uri)
   })
 
   if not res then
-      kong.log.err("failed to call introspection endpoint: ",err)
+      kong.log.err("failed to call authentication endpoint: ",err)
       return kong.response.exit(500)
   end
   if res.status ~= 200 then
-      kong.log.err("introspection endpoint responded with status: ",res.status)
+      kong.log.err("authentication endpoint responded with status: ",res.status)
       return kong.response.exit(500)
   end
 
