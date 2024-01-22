@@ -3,7 +3,7 @@ local utils = require "kong.tools.utils"
 
 local TokenHandler = {
     VERSION = "1.0",
-    PRIORITY = 1000,
+    PRIORITY = 100,
 }
 
 
