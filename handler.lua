@@ -10,6 +10,7 @@ local TokenHandler = {
 local function introspect_access_token(conf, access_token, req_uri)
   local httpc = http:new()
   -- step 1: validate the token
+  kong.log.info('oauth2-custom authentication', '{"uri":"' .. req_uri .. '"}')
   local res, err = httpc:request_uri(conf.authentication_endpoint, {
       method = "POST",
       ssl_verify = false,
@@ -28,10 +29,11 @@ local function introspect_access_token(conf, access_token, req_uri)
   end
 
   -- step 2: validate the customer access rights
+  kong.log.info('oauth2-custom authorization', '{ "uri":"' .. req_uri .. '"}')
   local res, _ = httpc:request_uri(conf.authorization_endpoint, {
       method = "POST",
       ssl_verify = false,
-      body = '{ "uri":"' .. req_uri .. '"}',
+      body = '{"uri":"' .. req_uri .. '"}',
       headers = { ["Content-Type"] = "application/json",
           ["Authorization"] = "Bearer " .. access_token }
   })
