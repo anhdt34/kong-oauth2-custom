@@ -2,7 +2,7 @@ local typedefs = require "kong.db.schema.typedefs"
 
 
 return {
-  name = "custom-auth",
+  name = "kong-oauth2-custom",
   fields = {
     { protocols = typedefs.protocols_http },
     { consumer = typedefs.no_consumer },
