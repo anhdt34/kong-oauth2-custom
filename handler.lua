@@ -42,7 +42,8 @@ function TokenHandler:access(conf)
 
   introspect_access_token(conf, access_token, request_path)
 
-  kong.service.clear_header(conf.token_header)
+  -- kong.service.clear_header(conf.token_header)
+  -- No need to call kong.service.clear_header in the access phase
 end
 
 
