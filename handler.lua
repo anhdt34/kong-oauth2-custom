@@ -21,11 +21,11 @@ local function introspect_access_token(conf, access_token, req_uri)
 
   if not res then
     kong.log.err("failed to call authorization endpoint: ", err)
-    return kong.response.exit(500)
+    return kong.response.exit(401)
   end
   if res.status ~= 200 then
       kong.log.err("authorization endpoint responded with status: ", res.status)
-      return kong.response.exit(500)
+      return kong.response.exit(res.status)
   end
 
   return true -- all is well
