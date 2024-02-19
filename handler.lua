@@ -61,7 +61,8 @@ function TokenHandler:header_filter(conf)
         local user_id = response_data.userName
 
         if user_id then
-            kong.response.add_header("X-User-Id", user_id)
+            -- Set the "X-User-Id" header, overwriting if it already exists
+            kong.response.set_header("X-User-Id", user_id)
         end
     end
 
