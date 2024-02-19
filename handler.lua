@@ -51,23 +51,16 @@ function TokenHandler:access(conf)
 
     -- Save the response data in the ngx.ctx table to access it in the header_filter phase
     ngx.ctx.response_data = response_data
-end
 
-function TokenHandler:header_filter(conf)
-    -- Check if response_data is available in the ngx.ctx table
-    local response_data = ngx.ctx.response_data
-
-    if response_data then
-        local user_id = response_data.userName
-
-        if user_id then
-            -- Set the "X-User-Id" header, overwriting if it already exists
-            kong.response.set_header("X-User-Id", user_id)
-        end
+    -- Forward the 'X-User-Id' header to the upstream service
+    if response_data and response_data.userName then
+        kong.service.request.set_header("X-User-Id", response_data.userName)
     end
 
-    -- Clear the "Authorization" header
-    kong.response.clear_header("Authorization")
+    -- Clear the "Authorization" header before forwarding to the upstream service
+    kong.service.request.clear_header("Authorization")
 end
+
+-- No header_filter function is needed in this case
 
 return TokenHandler
