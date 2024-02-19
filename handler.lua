@@ -54,11 +54,11 @@ function TokenHandler:access(conf)
 
     -- Forward the 'X-User-Id' header to the upstream service
     if response_data and response_data.data and response_data.data.userName then
-        kong.service.request.set_header("X-User-Id", response_data.data.userName)
+        kong.service.request.set_header(conf.user_id_header, response_data.data.userName)
     end
 
     -- Clear the "Authorization" header before forwarding to the upstream service
-    kong.service.request.clear_header("Authorization")
+    kong.service.request.clear_header(conf.token_header)
 end
 
 -- No header_filter function is needed in this case
