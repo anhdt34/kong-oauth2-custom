@@ -10,7 +10,10 @@ return {
         type = "record",
         fields = {
           { authorization_endpoint = typedefs.url({ required = true }) },
-          { token_header = typedefs.header_name { default = "Authorization", required = true }, }
-    }, }, },
+          { token_header = typedefs.header_name { default = "Authorization", required = true }, },
+          { user_id_header = typedefs.user_id_header { default = "X-User-Id", required = true }, }
+        }, 
+      }, 
+    },
   },
 }
