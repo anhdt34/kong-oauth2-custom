@@ -28,7 +28,7 @@ local function introspect_access_token(conf, access_token, req_uri)
 
     if res.status ~= 200 then
         kong.log.err("authorization endpoint responded with status: ", res.status)
-        return kong.response.exit(500)
+        return kong.response.exit(401)
     end
 
     -- Assuming the response data is in JSON format
