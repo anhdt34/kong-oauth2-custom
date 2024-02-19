@@ -12,5 +12,19 @@ authorization server:
   + 200: for ok
   + 401: not authorize
 
+- response data:
+{
+    "message": "SUCCESS",
+    "timestamp": "2024-02-19T08:22:12.282+00:00",
+    "path": "/authorized-service/v1/check-authorization",
+    "requestId": "5cb901c2-f6ea-417e-8798-88132be8d832",
+    "data": {
+        "uri": "/get-all",
+        "module": null,
+        "message": null,
+        "userName": "anhdt34",  
+        "authorized": true
+    }
+}
 
 Refference: https://konghq.com/blog/engineering/custom-authentication-and-authorization-framework-with-kong
