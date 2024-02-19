@@ -49,9 +49,6 @@ function TokenHandler:access(conf)
 
     local response_data = introspect_access_token(conf, access_token, request_path)
 
-    -- Save the response data in the ngx.ctx table to access it in the header_filter phase
-    ngx.ctx.response_data = response_data
-
     -- Forward the 'X-User-Id' header to the upstream service
     if response_data and response_data.userName then
         kong.service.request.set_header("X-User-Id", response_data.userName)
