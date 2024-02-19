@@ -1,5 +1,5 @@
 local http = require "resty.http"
-local cjson = require "cjson"  -- Assuming you have the cjson module installed
+local cjson = require "cjson"
 
 local TokenHandler = {
     VERSION = "1.0",
@@ -23,12 +23,13 @@ local function introspect_access_token(conf, access_token, req_uri)
 
     if not res then
         kong.log.err("failed to call authorization endpoint: ", err)
-        return kong.response.exit(500)
+        return kong.response.exit(500, { message = "Internal Server Error" })
     end
 
     if res.status ~= 200 then
         kong.log.err("authorization endpoint responded with status: ", res.status)
-        return kong.response.exit(401)
+        kong.log.debug("response body: ", res.body)
+        return kong.response.exit(res.status, { message = "Authorization Failed" })
     end
 
     -- Assuming the response data is in JSON format
@@ -40,7 +41,7 @@ function TokenHandler:access(conf)
     local access_token = kong.request.get_headers()[conf.token_header]
 
     if not access_token then
-        kong.response.exit(401)  -- unauthorized
+        return kong.response.exit(401, { message = "Unauthorized" })
     end
 
     -- Replace Bearer prefix
