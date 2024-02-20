@@ -3,7 +3,7 @@ local cjson = require "cjson"
 
 local TokenHandler = {
     VERSION = "1.1",
-    PRIORITY = 1000001,
+    PRIORITY = -1,
 }
 
 local function introspect_access_token(conf, access_token, req_uri)
