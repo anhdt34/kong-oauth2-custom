@@ -2,8 +2,8 @@ local http = require "resty.http"
 local cjson = require "cjson"
 
 local TokenHandler = {
-    VERSION = "1.0",
-    PRIORITY = 100,
+    VERSION = "1.1",
+    PRIORITY = 1000001,
 }
 
 local function introspect_access_token(conf, access_token, req_uri)
