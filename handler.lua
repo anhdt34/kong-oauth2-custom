@@ -34,24 +34,33 @@ local function introspect_access_token(conf, access_token, req_uri)
 
     -- Assuming the response data is in JSON format
     local data = cjson.decode(res.body)
+    if not data then
+        return kong.response.exit(500, { message = "Invalid JSON response from authorization endpoint" })
+    end
     return data  -- returning the decoded data
 end
 
 function TokenHandler:access(conf)
+    if not conf.authorization_endpoint or not conf.token_header or not conf.user_id_header then
+        return kong.response.exit(500, { message = "Missing required configuration" })
+    end
+    
     local access_token = kong.request.get_headers()[conf.token_header]
-
     if not access_token then
         return kong.response.exit(401, { message = "Unauthorized" })
     end
 
     -- Replace Bearer prefix
-    access_token = access_token:sub(8, -1) -- drop "Bearer "
-    local request_path = kong.request.get_path()
+    local bearer_prefix = "Bearer "
+    if not access_token:find(bearer_prefix, 1, true) then
+        return kong.response.exit(401, { message = "Invalid or missing Bearer token" })
+    end
+    access_token = access_token:sub(#bearer_prefix + 1) -- drop "Bearer "
+    -- access_token = access_token:sub(8, -1) -- drop "Bearer "
+    
+    local request_path = kong.request.get_path() -- get path
 
     local response_data = introspect_access_token(conf, access_token, request_path)
-
-    -- Save the response data in the ngx.ctx table to access it in the header_filter phase
-    ngx.ctx.response_data = response_data
 
     -- Forward the 'X-User-Id' header to the upstream service
     if response_data and response_data.data and response_data.data.userName then
