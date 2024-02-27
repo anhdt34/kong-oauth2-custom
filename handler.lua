@@ -2,7 +2,7 @@ local http = require "resty.http"
 local cjson = require "cjson"
 
 local TokenHandler = {
-    VERSION = "1.1",
+    VERSION = "1.2",
     PRIORITY = -1,
 }
 
