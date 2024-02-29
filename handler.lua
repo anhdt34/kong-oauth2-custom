@@ -1,19 +1,22 @@
 local http = require "resty.http"
 local cjson = require "cjson"
+local opentelemetry = require "opentelemetry"
 
 local TokenHandler = {
-    VERSION = "1.2",
+    VERSION = "1.2.1",
     PRIORITY = -1,
 }
 
-local function introspect_access_token(conf, access_token, req_uri, headers)
+local function introspect_access_token(conf, access_token, req_uri)
     local httpc = http:new()
 
-    kong.log.info('oauth2-custom authorization', '{ "uri":"' .. req_uri .. '"}')
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["Authorization"] = "Bearer " .. access_token
+    }
 
-    headers = headers or {}
-    headers["Content-Type"] = "application/json"
-    headers["Authorization"] = "Bearer " .. access_token
+    -- Inject trace context into headers
+    local current_context = opentelemetry.get_text_map_propagator():inject(opentelemetry.get_context(), headers)
 
     local res, err = httpc:request_uri(conf.authorization_endpoint, {
         method = "POST",
@@ -57,17 +60,10 @@ function TokenHandler:access(conf)
         return kong.response.exit(401, { message = "Invalid or missing Bearer token" })
     end
     access_token = access_token:sub(#bearer_prefix + 1) -- drop "Bearer "
-    -- access_token = access_token:sub(8, -1) -- drop "Bearer "
     
     local request_path = kong.request.get_path() -- get path
 
-    local headers = {
-        ["x-b3-traceid"] = ngx.var.http_x_b3_traceid or "",
-        ["x-b3-spanid"] = ngx.var.http_x_b3_spanid or "",
-        ["x-b3-sampled"] = ngx.var.http_x_b3_sampled or "",
-    }
-    
-    local response_data = introspect_access_token(conf, access_token, request_path, headers)
+    local response_data = introspect_access_token(conf, access_token, request_path)
 
     -- Forward the 'X-User-Id' header to the upstream service
     if response_data and response_data.data and response_data.data.userName then
