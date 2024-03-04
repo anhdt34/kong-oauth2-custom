@@ -1,6 +1,6 @@
 local http = require "resty.http"
 local cjson = require "cjson"
-local opentelemetry = require "opentelemetry"
+--local opentelemetry = require "opentelemetry"
 
 local TokenHandler = {
     VERSION = "1.2.1",
@@ -12,11 +12,12 @@ local function introspect_access_token(conf, access_token, req_uri)
 
     local headers = {
         ["Content-Type"] = "application/json",
-        ["Authorization"] = "Bearer " .. access_token
+        ["Authorization"] = "Bearer " .. access_token,
+        ["traceparent"] = kong.request.get_header("traceparent") or "",
     }
-
+    
     -- Inject trace context into headers
-    local current_context = opentelemetry.get_text_map_propagator():inject(opentelemetry.get_context(), headers)
+    --local current_context = opentelemetry.get_text_map_propagator():inject(opentelemetry.get_context(), headers)
 
     local res, err = httpc:request_uri(conf.authorization_endpoint, {
         method = "POST",
