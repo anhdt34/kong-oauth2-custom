@@ -1,9 +1,9 @@
 local http = require "resty.http"
 local cjson = require "cjson"
---local opentelemetry = require "opentelemetry"
+-- local opentelemetry = require "opentelemetry"
 
 local TokenHandler = {
-    VERSION = "1.2.1",
+    VERSION = "1.2.2",
     PRIORITY = -1,
 }
 
@@ -15,9 +15,9 @@ local function introspect_access_token(conf, access_token, req_uri)
         ["Authorization"] = "Bearer " .. access_token,
         ["traceparent"] = kong.request.get_header("traceparent") or "",
     }
-    
+
     -- Inject trace context into headers
-    --local current_context = opentelemetry.get_text_map_propagator():inject(opentelemetry.get_context(), headers)
+    -- local current_context = opentelemetry.get_text_map_propagator():inject(opentelemetry.get_context(), headers)
 
     local res, err = httpc:request_uri(conf.authorization_endpoint, {
         method = "POST",
@@ -28,7 +28,18 @@ local function introspect_access_token(conf, access_token, req_uri)
 
     if not res then
         kong.log.err("failed to call authorization endpoint: ", err)
-        return kong.response.exit(500, { message = "Internal Server Error" })
+        return kong.response.exit(500, 
+        {
+            response = {
+                message = {
+                    language = "en",
+                    content = "Internal Server Error"
+                },
+                version = "1.2.2",
+                code = "000_05"
+            },
+            signature = ""
+        })
     end
 
     if res.status ~= 200 then
@@ -40,25 +51,69 @@ local function introspect_access_token(conf, access_token, req_uri)
     -- Assuming the response data is in JSON format
     local data = cjson.decode(res.body)
     if not data then
-        return kong.response.exit(500, { message = "Invalid JSON response from authorization endpoint" })
+        return kong.response.exit(500, 
+        {
+            response = {
+                message = {
+                    language = "en",
+                    content = "Invalid JSON response from authorization endpoint"
+                },
+                version = "1.2.2",
+                code = "000_04"
+            },
+            signature = ""
+        })
     end
     return data  -- returning the decoded data
 end
 
 function TokenHandler:access(conf)
     if not conf.authorization_endpoint or not conf.token_header or not conf.user_id_header then
-        return kong.response.exit(500, { message = "Missing required configuration" })
+        return kong.response.exit(500, 
+        {
+            response = {
+                message = {
+                    language = "en",
+                    content = "Missing required configuration"
+                },
+                version = "1.2.2",
+                code = "000_01"
+            },
+            signature = ""
+        })
     end
     
     local access_token = kong.request.get_headers()[conf.token_header]
     if not access_token then
-        return kong.response.exit(401, { message = "Unauthorized" })
+        return kong.response.exit(401, 
+        {
+            response = {
+                message = {
+                    language = "en",
+                    content = "Missing token"
+                },
+                version = "1.2.2",
+                code = "000_02"
+            },
+            signature = ""
+        })
     end
 
     -- Replace Bearer prefix
     local bearer_prefix = "Bearer "
     if not access_token:find(bearer_prefix, 1, true) then
-        return kong.response.exit(401, { message = "Invalid or missing Bearer token" })
+        return kong.response.exit(401, 
+        {
+            response = {
+                message = {
+                    language = "en",
+                    content = "Invalid or missing Bearer token"
+                },
+                version = "1.2.2",
+                code = "000_03"
+            },
+            signature = ""
+        })
     end
     access_token = access_token:sub(#bearer_prefix + 1) -- drop "Bearer "
     
