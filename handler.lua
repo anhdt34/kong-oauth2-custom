@@ -2,7 +2,7 @@ local http = require "resty.http"
 local cjson = require "cjson"
 
 local TokenHandler = {
-    VERSION = "1.2.2",
+    VERSION = "1.2.3",
     PRIORITY = -1,
 }
 
@@ -20,7 +20,7 @@ local function create_response(code, message_content)
     }
 end
 
-local function call_authorization_endpoint(conf, access_token, req_uri)
+local function call_authorization_endpoint(conf, access_token, req_uri, req_info)
     local httpc = http.new()
 
     local headers = {
@@ -32,7 +32,12 @@ local function call_authorization_endpoint(conf, access_token, req_uri)
     local res, err = httpc:request_uri(conf.authorization_endpoint, {
         method = "POST",
         ssl_verify = false,
-        body = cjson.encode({ uri = req_uri }), -- Encode request body
+        body = cjson.encode({ 
+            info = req_info,
+            data = {
+                uri = req_uri 
+            }
+        }), -- Encode request body
         headers = headers
     })
 
@@ -73,7 +78,13 @@ function TokenHandler:access(conf)
     
     local request_path = kong.request.get_path()
 
-    local response_data = call_authorization_endpoint(conf, access_token, request_path)
+    local body_info = kong.request.get_body() and kong.request.get_body().info or nil
+
+    if not body_info then
+        return kong.response.exit(400, create_response("000_06", "Missing request body info"))
+    end
+
+    local response_data = call_authorization_endpoint(conf, access_token, request_path, body_info)
 
     if response_data and response_data.data and response_data.data.userName then
         kong.service.request.set_header(conf.user_id_header, response_data.data.userName)
